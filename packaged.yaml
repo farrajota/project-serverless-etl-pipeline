@@ -4,6 +4,12 @@ Description: 'A serverless ETL pipeline for storing and processing visitor gende
 
   '
 Outputs:
+  DynamodbTable:
+    Description: Dynamodb Table ARN
+    Value:
+      Fn::GetAtt:
+      - DynamoDBTable
+      - Arn
   FirehoseStreamProcessFunction:
     Description: The Lambda Function that will process Firehose records
     Value:
@@ -25,6 +31,36 @@ Outputs:
       - S3BucketStoreFirehoseStream
       - Arn
 Parameters:
+  DynamodbKeyElementName:
+    Default: client_id
+    Description: Primary Key Name
+    Type: String
+  DynamodbKeyElementType:
+    AllowedPattern: '[S|N]'
+    ConstraintDescription: must be either S or N
+    Default: S
+    Description: Primary Key Type
+    MaxLength: '1'
+    MinLength: '1'
+    Type: String
+  DynamodbReadCapacityUnits:
+    ConstraintDescription: must be between 5 and 10000
+    Default: '5'
+    Description: Provisioned read throughput
+    MaxValue: '10000'
+    MinValue: '5'
+    Type: Number
+  DynamodbTableName:
+    Default: case-study-project-dynamodb-gender
+    Description: Dynamodb's table name
+    Type: String
+  DynamodbWriteCapacityUnits:
+    ConstraintDescription: must be between 5 and 10000
+    Default: '5'
+    Description: Provisioned write throughput
+    MaxValue: '10000'
+    MinValue: '5'
+    Type: Number
   FirehoseBufferingInterval:
     Default: 60
     Description: How long Firehose will wait before writing a new batch into S3
@@ -87,6 +123,25 @@ Parameters:
     Description: S3 bucket name to store the firehose stream data
     Type: String
 Resources:
+  DynamoDBTable:
+    Properties:
+      AttributeDefinitions:
+      - AttributeName:
+          Ref: DynamodbKeyElementName
+        AttributeType:
+          Ref: DynamodbKeyElementType
+      KeySchema:
+      - AttributeName:
+          Ref: DynamodbKeyElementName
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits:
+          Ref: DynamodbReadCapacityUnits
+        WriteCapacityUnits:
+          Ref: DynamodbWriteCapacityUnits
+      TableName:
+        Ref: DynamodbTableName
+    Type: AWS::DynamoDB::Table
   FirehoseDeliveryPolicy:
     Properties:
       PolicyDocument:

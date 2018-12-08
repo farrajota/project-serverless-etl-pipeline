@@ -50,6 +50,41 @@ Parameters:
         Default: 128
         AllowedValues: [128,192,256,320,384,448,512,576,640,704,768,832,896,960,1024,1088,1152,1216,1280,1344,1408,1472,1536]
 
+    DynamodbTableName:
+        Type: String
+        Default: case-study-project-dynamodb-gender
+        Description: "Dynamodb's table name"
+
+    DynamodbKeyElementName:
+        Type: String
+        Default: client_id
+        Description: "Primary Key Name"
+
+    DynamodbKeyElementType:
+        Type: String
+        Default: S
+        AllowedPattern: '[S|N]'
+        MinLength: '1'
+        MaxLength: '1'
+        ConstraintDescription: must be either S or N
+        Description: "Primary Key Type"
+
+    DynamodbReadCapacityUnits:
+        Type: Number
+        Default: '5'
+        MinValue: '5'
+        MaxValue: '10000'
+        ConstraintDescription: must be between 5 and 10000
+        Description: "Provisioned read throughput"
+
+    DynamodbWriteCapacityUnits:
+        Type: Number
+        Default: '5'
+        MinValue: '5'
+        MaxValue: '10000'
+        ConstraintDescription: must be between 5 and 10000
+        Description: "Provisioned write throughput"
+
 Resources:
 
     S3BucketStoreFirehoseStream:
@@ -58,6 +93,12 @@ Resources:
         Properties:
             AccessControl: Private
             BucketName: !Ref S3BucketFirehoseStreamName
+            #NotificationConfiguration:
+            #    LambdaConfigurations:
+            #        -
+            #        Function: !Ref LambdaDeploymentArn
+            #        Event: "s3:ObjectCreated:*"
+
 
     KinesisFirehoseDeliveryStream:
         Type: AWS::KinesisFirehose::DeliveryStream
@@ -138,6 +179,20 @@ Resources:
             MemorySize: !Ref FirehoseLambdaMemorySize
             Timeout: !Ref FirehoseLambdaTimeout
 
+    DynamoDBTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            TableName: !Ref DynamodbTableName
+            AttributeDefinitions:
+              - AttributeName: !Ref DynamodbKeyElementName
+                AttributeType: !Ref DynamodbKeyElementType
+            KeySchema:
+              - AttributeName: !Ref DynamodbKeyElementName
+                KeyType: "HASH"
+            ProvisionedThroughput:
+                ReadCapacityUnits: !Ref DynamodbReadCapacityUnits
+                WriteCapacityUnits: !Ref DynamodbWriteCapacityUnits
+
 
 Outputs:
 
@@ -156,3 +211,7 @@ Outputs:
     FirehoseStreamProcessFunction:
         Description: "The Lambda Function that will process Firehose records"
         Value: !Ref FirehoseStreamProcessFunction
+
+    DynamodbTable:
+        Description: "Dynamodb Table ARN"
+        Value: !GetAtt DynamoDBTable.Arn
