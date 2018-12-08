@@ -15,9 +15,73 @@ Resources:
             AccessControl: Private
             BucketName: case-study-kinesis-firehose-stream
 
+    KinesisFirehoseDeliveryStream:
+        DependsOn:
+            - KinesisDeliveryPolicy
+        Type: AWS::KinesisFirehose::DeliveryStream
+        Properties:
+            ExtendedS3DestinationConfiguration:
+                BucketARN: !Join
+                    - ''
+                    - - 'arn:aws:s3:::'
+                      - !Ref S3BucketStoreFirehoseStream
+                BufferingHints:
+                    IntervalInSeconds: "60"
+                    SizeInMBs: "50"
+                CompressionFormat: UNCOMPRESSED
+                Prefix: firehose/
+                RoleARN: !GetAtt KinesisDeliveryRole.Arn
+
+    KinesisDeliveryRole:
+        Type: AWS::IAM::Role
+        Properties:
+            AssumeRolePolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                  - Sid: ''
+                    Effect: Allow
+                    Principal:
+                        Service: firehose.amazonaws.com
+                    Action: 'sts:AssumeRole'
+                    Condition:
+                        StringEquals:
+                            'sts:ExternalId': !Ref 'AWS::AccountId'
+
+    KinesisDeliveryPolicy:
+        Type: AWS::IAM::Policy
+        Properties:
+            PolicyName: firehose_delivery_policy
+            PolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                    - Effect: Allow
+                      Action:
+                        - 's3:AbortMultipartUpload'
+                        - 's3:GetBucketLocation'
+                        - 's3:GetObject'
+                        - 's3:ListBucket'
+                        - 's3:ListBucketMultipartUploads'
+                        - 's3:PutObject'
+                      Resource:
+                        - !Join
+                            - ''
+                            - - 'arn:aws:s3:::'
+                              - !Ref S3BucketStoreFirehoseStream
+                        - !Join
+                            - ''
+                            - - 'arn:aws:s3:::'
+                              - !Ref S3BucketStoreFirehoseStream
+                              - '*'
+            Roles:
+                - !Ref KinesisDeliveryRole
+
+
 Outputs:
 
     S3BucketNameKinesisFirehose:
         Description: "S3 bucket to store the streaming data from Kinesis Firehose"
         Value: !GetAtt S3BucketStoreFirehoseStream.Arn
 
+    KinesisFirehoseDeliverStream:
+        Description: "Kinesis Firehose Delivery Stream ARN"
+        Value: !GetAtt KinesisFirehoseDeliveryStream.Arn
