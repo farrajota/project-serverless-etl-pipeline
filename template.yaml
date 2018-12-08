@@ -6,6 +6,50 @@ Description: >
     predict a visitor's gender by ID.
 
 
+Parameters:
+
+    S3BucketFirehoseStreamName:
+        Type: String
+        Default: case-study-kinesis-firehose-stream
+        Description: "S3 bucket name to store the firehose stream data"
+
+    FirehoseS3Prefix:
+        Type: String
+        Default: firehose/
+        Description: "The S3 Key prefix for Kinesis Firehose."
+
+    FirehoseCompressionFormat:
+        Type: String
+        Default: UNCOMPRESSED
+        AllowedValues: [UNCOMPRESSED, GZIP, Snappy]
+        Description: "Compression format used by Kinesis Firehose"
+
+    FirehoseBufferingInterval:
+        Type: Number
+        Default: 60
+        MinValue: 60
+        MaxValue: 900
+        Description: "How long Firehose will wait before writing a new batch into S3"
+
+    FirehoseBufferingSize:
+        Type: Number
+        Default: 10
+        MinValue: 1
+        MaxValue: 128
+        Description: "Maximum batch size in MB"
+
+    FirehoseLambdaTimeout:
+        Type: Number
+        Default: 60
+        MinValue: 5
+        MaxValue: 900
+        Description: "Maximum Lambda execution time in seconds"
+
+    FirehoseLambdaMemorySize:
+        Type: String
+        Default: 128
+        AllowedValues: [128,192,256,320,384,448,512,576,640,704,768,832,896,960,1024,1088,1152,1216,1280,1344,1408,1472,1536]
+
 Resources:
 
     S3BucketStoreFirehoseStream:
@@ -13,26 +57,31 @@ Resources:
         #DeletionPolicy: Retain
         Properties:
             AccessControl: Private
-            BucketName: case-study-kinesis-firehose-stream
+            BucketName: !Ref S3BucketFirehoseStreamName
 
     KinesisFirehoseDeliveryStream:
-        DependsOn:
-            - KinesisDeliveryPolicy
         Type: AWS::KinesisFirehose::DeliveryStream
+        DependsOn:
+            - FirehoseDeliveryPolicy
         Properties:
+            DeliveryStreamType: DirectPut
             ExtendedS3DestinationConfiguration:
-                BucketARN: !Join
-                    - ''
-                    - - 'arn:aws:s3:::'
-                      - !Ref S3BucketStoreFirehoseStream
+                BucketARN: !GetAtt S3BucketStoreFirehoseStream.Arn
                 BufferingHints:
-                    IntervalInSeconds: "60"
-                    SizeInMBs: "50"
-                CompressionFormat: UNCOMPRESSED
-                Prefix: firehose/
-                RoleARN: !GetAtt KinesisDeliveryRole.Arn
+                    IntervalInSeconds: !Ref FirehoseBufferingInterval
+                    SizeInMBs: !Ref FirehoseBufferingSize
+                CompressionFormat: !Ref FirehoseCompressionFormat
+                Prefix: !Ref FirehoseS3Prefix
+                RoleARN: !GetAtt FirehoseDeliveryRole.Arn
+                ProcessingConfiguration:
+                    Enabled: 'true'
+                    Processors:
+                        - Parameters:
+                            - ParameterName: LambdaArn
+                              ParameterValue: !GetAtt FirehoseStreamProcessFunction.Arn
+                          Type: Lambda
 
-    KinesisDeliveryRole:
+    FirehoseDeliveryRole:
         Type: AWS::IAM::Role
         Properties:
             AssumeRolePolicyDocument:
@@ -47,7 +96,7 @@ Resources:
                         StringEquals:
                             'sts:ExternalId': !Ref 'AWS::AccountId'
 
-    KinesisDeliveryPolicy:
+    FirehoseDeliveryPolicy:
         Type: AWS::IAM::Policy
         Properties:
             PolicyName: firehose_delivery_policy
@@ -56,6 +105,7 @@ Resources:
                 Statement:
                     - Effect: Allow
                       Action:
+                        - 'lambda:InvokeFunction'
                         - 's3:AbortMultipartUpload'
                         - 's3:GetBucketLocation'
                         - 's3:GetObject'
@@ -63,6 +113,7 @@ Resources:
                         - 's3:ListBucketMultipartUploads'
                         - 's3:PutObject'
                       Resource:
+                        - !GetAtt FirehoseStreamProcessFunction.Arn
                         - !Join
                             - ''
                             - - 'arn:aws:s3:::'
@@ -73,7 +124,19 @@ Resources:
                               - !Ref S3BucketStoreFirehoseStream
                               - '*'
             Roles:
-                - !Ref KinesisDeliveryRole
+                - !Ref FirehoseDeliveryRole
+
+    FirehoseStreamProcessFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: kinesis_firehose_stream_process/
+            Handler: app.lambda_handler
+            Runtime: python3.7
+            Description: >-
+                An Amazon Kinesis Firehose stream processor that appends a timestamp
+                to input records.
+            MemorySize: !Ref FirehoseLambdaMemorySize
+            Timeout: !Ref FirehoseLambdaTimeout
 
 
 Outputs:
@@ -85,3 +148,11 @@ Outputs:
     KinesisFirehoseDeliverStream:
         Description: "Kinesis Firehose Delivery Stream ARN"
         Value: !GetAtt KinesisFirehoseDeliveryStream.Arn
+
+    Region:
+        Description: "The region this template was launched in."
+        Value: !Ref 'AWS::Region'
+
+    FirehoseStreamProcessFunction:
+        Description: "The Lambda Function that will process Firehose records"
+        Value: !Ref FirehoseStreamProcessFunction

@@ -4,24 +4,95 @@ Description: 'A serverless ETL pipeline for storing and processing visitor gende
 
   '
 Outputs:
+  FirehoseStreamProcessFunction:
+    Description: The Lambda Function that will process Firehose records
+    Value:
+      Ref: FirehoseStreamProcessFunction
   KinesisFirehoseDeliverStream:
     Description: Kinesis Firehose Delivery Stream ARN
     Value:
       Fn::GetAtt:
       - KinesisFirehoseDeliveryStream
       - Arn
+  Region:
+    Description: The region this template was launched in.
+    Value:
+      Ref: AWS::Region
   S3BucketNameKinesisFirehose:
     Description: S3 bucket to store the streaming data from Kinesis Firehose
     Value:
       Fn::GetAtt:
       - S3BucketStoreFirehoseStream
       - Arn
+Parameters:
+  FirehoseBufferingInterval:
+    Default: 60
+    Description: How long Firehose will wait before writing a new batch into S3
+    MaxValue: 900
+    MinValue: 60
+    Type: Number
+  FirehoseBufferingSize:
+    Default: 10
+    Description: Maximum batch size in MB
+    MaxValue: 128
+    MinValue: 1
+    Type: Number
+  FirehoseCompressionFormat:
+    AllowedValues:
+    - UNCOMPRESSED
+    - GZIP
+    - Snappy
+    Default: UNCOMPRESSED
+    Description: Compression format used by Kinesis Firehose
+    Type: String
+  FirehoseLambdaMemorySize:
+    AllowedValues:
+    - 128
+    - 192
+    - 256
+    - 320
+    - 384
+    - 448
+    - 512
+    - 576
+    - 640
+    - 704
+    - 768
+    - 832
+    - 896
+    - 960
+    - 1024
+    - 1088
+    - 1152
+    - 1216
+    - 1280
+    - 1344
+    - 1408
+    - 1472
+    - 1536
+    Default: 128
+    Type: String
+  FirehoseLambdaTimeout:
+    Default: 60
+    Description: Maximum Lambda execution time in seconds
+    MaxValue: 900
+    MinValue: 5
+    Type: Number
+  FirehoseS3Prefix:
+    Default: firehose/
+    Description: The S3 Key prefix for Kinesis Firehose.
+    Type: String
+  S3BucketFirehoseStreamName:
+    Default: case-study-kinesis-firehose-stream
+    Description: S3 bucket name to store the firehose stream data
+    Type: String
 Resources:
-  KinesisDeliveryPolicy:
+  FirehoseDeliveryPolicy:
     Properties:
       PolicyDocument:
         Statement:
         - Action:
+          - lambda:InvokeFunction
           - s3:AbortMultipartUpload
           - s3:GetBucketLocation
           - s3:GetObject
@@ -30,6 +101,9 @@ Resources:
           - s3:PutObject
           Effect: Allow
           Resource:
+          - Fn::GetAtt:
+            - FirehoseStreamProcessFunction
+            - Arn
           - Fn::Join:
             - ''
             - - 'arn:aws:s3:::'
@@ -42,9 +116,9 @@ Resources:
         Version: 2012-10-17
       PolicyName: firehose_delivery_policy
       Roles:
-      - Ref: KinesisDeliveryRole
+      - Ref: FirehoseDeliveryRole
     Type: AWS::IAM::Policy
-  KinesisDeliveryRole:
+  FirehoseDeliveryRole:
     Properties:
       AssumeRolePolicyDocument:
         Statement:
@@ -59,29 +133,56 @@ Resources:
           Sid: ''
         Version: 2012-10-17
     Type: AWS::IAM::Role
+  FirehoseStreamProcessFunction:
+    Properties:
+      CodeUri: s3://data-pipeline-etl-project-lambda-code/74ff9f29c0ef496de46685b154335435
+      Description: An Amazon Kinesis Firehose stream processor that appends a timestamp
+        to input records.
+      Handler: app.lambda_handler
+      MemorySize:
+        Ref: FirehoseLambdaMemorySize
+      Runtime: python3.7
+      Timeout:
+        Ref: FirehoseLambdaTimeout
+    Type: AWS::Serverless::Function
   KinesisFirehoseDeliveryStream:
     DependsOn:
-    - KinesisDeliveryPolicy
+    - FirehoseDeliveryPolicy
     Properties:
+      DeliveryStreamType: DirectPut
       ExtendedS3DestinationConfiguration:
         BucketARN:
-          Fn::Join:
-          - ''
-          - - 'arn:aws:s3:::'
-            - Ref: S3BucketStoreFirehoseStream
+          Fn::GetAtt:
+          - S3BucketStoreFirehoseStream
+          - Arn
         BufferingHints:
-          IntervalInSeconds: '60'
-          SizeInMBs: '50'
-        CompressionFormat: UNCOMPRESSED
-        Prefix: firehose/
+          IntervalInSeconds:
+            Ref: FirehoseBufferingInterval
+          SizeInMBs:
+            Ref: FirehoseBufferingSize
+        CompressionFormat:
+          Ref: FirehoseCompressionFormat
+        Prefix:
+          Ref: FirehoseS3Prefix
+        ProcessingConfiguration:
+          Enabled: 'true'
+          Processors:
+          - Parameters:
+            - ParameterName: LambdaArn
+              ParameterValue:
+                Fn::GetAtt:
+                - FirehoseStreamProcessFunction
+                - Arn
+            Type: Lambda
         RoleARN:
           Fn::GetAtt:
-          - KinesisDeliveryRole
+          - FirehoseDeliveryRole
           - Arn
     Type: AWS::KinesisFirehose::DeliveryStream
   S3BucketStoreFirehoseStream:
     Properties:
       AccessControl: Private
-      BucketName: case-study-kinesis-firehose-stream
+      BucketName:
+        Ref: S3BucketFirehoseStreamName
     Type: AWS::S3::Bucket
 Transform: AWS::Serverless-2016-10-31
