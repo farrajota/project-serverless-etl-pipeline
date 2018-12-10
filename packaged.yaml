@@ -20,10 +20,21 @@ Outputs:
       Fn::GetAtt:
       - KinesisFirehoseDeliveryStream
       - Arn
+  ProcessStreamDataFunction:
+    Description: Lambda function that will process and compress the stream data stored
+      in S3
+    Value:
+      Ref: ProcessStreamDataUpdateDynamodbFunction
   Region:
     Description: The region this template was launched in.
     Value:
       Ref: AWS::Region
+  S3BucketCompressed:
+    Description: S3 bucket to store the compressed stream data
+    Value:
+      Fn::GetAtt:
+      - S3BucketCompressed
+      - Arn
   S3BucketNameKinesisFirehose:
     Description: S3 bucket to store the streaming data from Kinesis Firehose
     Value:
@@ -32,7 +43,7 @@ Outputs:
       - Arn
 Parameters:
   DynamodbKeyElementName:
-    Default: client_id
+    Default: clientid
     Description: Primary Key Name
     Type: String
   DynamodbKeyElementType:
@@ -118,9 +129,46 @@ Parameters:
     Default: firehose/
     Description: The S3 Key prefix for Kinesis Firehose.
     Type: String
+  ProcessLambdaMemorySize:
+    AllowedValues:
+    - 128
+    - 192
+    - 256
+    - 320
+    - 384
+    - 448
+    - 512
+    - 576
+    - 640
+    - 704
+    - 768
+    - 832
+    - 896
+    - 960
+    - 1024
+    - 1088
+    - 1152
+    - 1216
+    - 1280
+    - 1344
+    - 1408
+    - 1472
+    - 1536
+    Default: '256'
+    Type: Number
+  ProcessLambdaTimeout:
+    Default: '300'
+    Description: Maximum Lambda execution time in seconds
+    MaxValue: '900'
+    MinValue: '5'
+    Type: Number
+  S3BucketCompressedName:
+    Default: case-study-stream-compressed
+    Description: S3 bucket to store the compressed stream data
+    Type: String
   S3BucketFirehoseStreamName:
     Default: case-study-kinesis-firehose-stream
-    Description: S3 bucket name to store the firehose stream data
+    Description: S3 bucket to store the firehose stream data
     Type: String
 Resources:
   DynamoDBTable:
@@ -168,7 +216,7 @@ Resources:
             - - 'arn:aws:s3:::'
               - Ref: S3BucketStoreFirehoseStream
               - '*'
-        Version: 2012-10-17
+        Version: '2012-10-17'
       PolicyName: firehose_delivery_policy
       Roles:
       - Ref: FirehoseDeliveryRole
@@ -186,7 +234,7 @@ Resources:
           Principal:
             Service: firehose.amazonaws.com
           Sid: ''
-        Version: 2012-10-17
+        Version: '2012-10-17'
     Type: AWS::IAM::Role
   FirehoseStreamProcessFunction:
     Properties:
@@ -234,6 +282,71 @@ Resources:
           - FirehoseDeliveryRole
           - Arn
     Type: AWS::KinesisFirehose::DeliveryStream
+  ProcessStreamDataUpdateDynamodbFunction:
+    Properties:
+      CodeUri: s3://data-pipeline-etl-project-lambda-code/570e5569c3390a3399bb8bbc6b8e2545
+      Description: Compresses the stream data into parquet format, processes the hits
+        per client and updates the state of the dynamodb table. It is triggered by
+        a object creation event in the S3 bucket where stream data is stored as an
+        object/file.
+      Environment:
+        Variables:
+          DYNAMODB_TABLE:
+            Ref: DynamodbTableName
+          S3_BUCKET_DEST:
+            Ref: S3BucketCompressed
+          S3_BUCKET_SOURCE:
+            Ref: S3BucketFirehoseStreamName
+      Events:
+        S3FileListener:
+          Properties:
+            Bucket:
+              Ref: S3BucketStoreFirehoseStream
+            Events: s3:ObjectCreated:*
+          Type: S3
+      Handler: app.lambda_handler
+      MemorySize:
+        Ref: ProcessLambdaMemorySize
+      Policies:
+      - Statement:
+        - Action:
+          - s3:PutObject
+          Effect: Allow
+          Resource:
+          - Fn::Join:
+            - ''
+            - - 'arn:aws:s3:::'
+              - Ref: S3BucketCompressed
+              - '*'
+        - Action:
+          - s3:Get*
+          - s3:List*
+          - s3:DeleteObject
+          Effect: Allow
+          Resource:
+          - arn:aws:s3:::*
+        - Action:
+          - cloudwatch:PutMetricData
+          Effect: Allow
+          Resource: '*'
+        - Action:
+          - dynamodb:*
+          Effect: Allow
+          Resource:
+            Fn::GetAtt:
+            - DynamoDBTable
+            - Arn
+        Version: '2012-10-17'
+      Runtime: python3.7
+      Timeout:
+        Ref: ProcessLambdaTimeout
+    Type: AWS::Serverless::Function
+  S3BucketCompressed:
+    Properties:
+      AccessControl: Private
+      BucketName:
+        Ref: S3BucketCompressedName
+    Type: AWS::S3::Bucket
   S3BucketStoreFirehoseStream:
     Properties:
       AccessControl: Private
