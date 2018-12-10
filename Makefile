@@ -34,3 +34,8 @@ describe:
 	aws cloudformation describe-stacks \
 		--stack-name $(PROJECT_NAME) \
 		--query 'Stacks[].Outputs'
+
+regen:
+	make build \
+		package \
+		deploy
