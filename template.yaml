@@ -102,6 +102,19 @@ Parameters:
         Default: '256'
         AllowedValues: [128,192,256,320,384,448,512,576,640,704,768,832,896,960,1024,1088,1152,1216,1280,1344,1408,1472,1536]
 
+    LambdaRate:
+        Type: String
+        Description: >
+            The rate (frequency) that the top gender of the last 7 days
+            is computed for visitors.
+        Default: rate(1 minute)
+        AllowedValues:
+            - rate(1 minute)
+            - rate(5 minute)
+            - rate(10 minutes)
+            - rate(60 minutes)
+            - cron(0 1 * * ? *)  # 1am every day
+
 
 Resources:
 
@@ -125,6 +138,7 @@ Resources:
         DependsOn:
             - FirehoseDeliveryPolicy
         Properties:
+            DeliveryStreamName: case-study-project-KinesisFirehoseDeliveryStream
             DeliveryStreamType: DirectPut
             ExtendedS3DestinationConfiguration:
                 BucketARN: !GetAtt S3BucketStoreFirehoseStream.Arn
@@ -267,6 +281,75 @@ Resources:
                         Bucket: !Ref S3BucketStoreFirehoseStream
                         Events: s3:ObjectCreated:*
 
+    ########################################################
+    ### Schedule daily process of top gender last 7 days
+    ########################################################
+
+    ScheduledRule:
+        Type: AWS::Events::Rule
+        Properties:
+            Description: "ScheduledRule"
+            ScheduleExpression: !Ref LambdaRate
+            State: "ENABLED"
+            Targets:
+              - Arn: !GetAtt TopGenderLast7DaysLambdaFunction.Arn #!Sub ${TopGenderLast7DaysLambdaFunction.Arn}
+                Id: LambdaSchedule
+
+    PermissionForEventsToInvokeLambda:
+        Type: AWS::Lambda::Permission
+        Properties:
+            FunctionName: !GetAtt TopGenderLast7DaysLambdaFunction.Arn
+            Action: "lambda:InvokeFunction"
+            Principal: "events.amazonaws.com"
+            SourceArn: !GetAtt ScheduledRule.Arn
+
+    LambdaExecutionRole:
+        Type: "AWS::IAM::Role"
+        Properties:
+            AssumeRolePolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                  - Effect: Allow
+                    Principal:
+                        Service:
+                            - lambda.amazonaws.com
+                    Action:
+                        - sts:AssumeRole
+            Policies:
+              - PolicyName: "root"
+                PolicyDocument:
+                    Version: "2012-10-17"
+                    Statement:
+                      - Effect: Allow
+                        Action:
+                            - "s3:PutObject"
+                            - "s3:Get*"
+                        Resource: "arn:aws:s3:::case-study-stream-compressed*"
+                      - Effect: Allow
+                        Action:
+                            - "dynamodb:*"
+                        Resource: arn:aws:dynamodb:eu-west-1:335305222515:table/case-study-project-dynamodb-gender #!GetAtt DynamoDBTable.Arn
+            ManagedPolicyArns:
+                - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+    TopGenderLast7DaysLambdaFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: daily_process_lambda/
+            Handler: app.lambda_handler
+            Runtime: python3.7
+            Description: >-
+                Lambda function that processes the top gender per visitor
+                in the last 7 days.
+            Role: !GetAtt LambdaExecutionRole.Arn
+            MemorySize: 128
+            Timeout: 10
+            Environment:
+                Variables:
+                    S3_BUCKET_SOURCE: !Ref S3BucketCompressedName
+                    DYNAMODB_TABLE: !Ref DynamodbTableName
+                    FIREHOSE_PREFIX: !Ref FirehoseS3Prefix
+
 
 Outputs:
 
@@ -297,3 +380,7 @@ Outputs:
     ProcessStreamDataFunction:
         Description: "Lambda function that will process and compress the stream data stored in S3"
         Value: !Ref ProcessStreamDataUpdateDynamodbFunction
+
+    ComputeTopGenderLast7DaysLambdaFunction:
+        Description: "Lambda function that will compute the top gender per visitor in the last 7 days"
+        Value: !Ref TopGenderLast7DaysLambdaFunction
