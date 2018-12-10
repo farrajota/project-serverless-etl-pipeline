@@ -36,7 +36,7 @@ def lambda_handler(event, context):
     df.to_parquet(f"/tmp/{filename_parquet}", engine="pyarrow", compression="GZIP")
 
     # upload file to another s3 bucket
-    s3_path_filename = filename_parquet
+    s3_path_filename = os.path.join(os.path.dirname(file_key), filename_parquet)
     response = s3.Bucket(bucket_destination_name).upload_file(f"/tmp/{filename_parquet}", s3_path_filename)
 
     # remove original file from source bucket
