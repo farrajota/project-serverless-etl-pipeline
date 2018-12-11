@@ -47,7 +47,14 @@ When you get access to AWS services, create an account for programmatic access (
 
 ## Getting started
 
-To deploy and test the architecture you need to build, package and deploy the architecture to aws cloud. Then, to really test the architecture, some dummy data is needed to be generated in order to see the pipeline working.
+Before proceeding to deploy the architecture, you will need to define two environment vars containing your aws's access key and secrets. You can set them up by doing the following:
+
+```bash
+export AWS_ACCESS_KEY=<your_access_key>
+export AWS_SECRET_KEY=<your_secret_key>
+```
+
+After this is done, in order to deploy and test the architecture you need to build, package and deploy the architecture to aws cloud. Then, to really test the architecture, some dummy data is needed to be generated in order to see the pipeline working.
 
 To simplify these processs, several macros are available in the `Makefile` in the root of this repo.
 
@@ -143,7 +150,7 @@ make test
 
 This will run all unit tests inside the `tests/` folder.
 
-> Note: pytest module is require to run the tests.
+> Note: `pytest` module is required to run the tests.
 
 # License
 
