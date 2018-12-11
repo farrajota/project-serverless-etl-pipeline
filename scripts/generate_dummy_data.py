@@ -115,7 +115,7 @@ def upload_to_s3(filename, year, month, day, add_random_hour=True):
         aws_access_key_id=os.environ["AWS_ACCESS_KEY"],
         aws_secret_access_key=os.environ["AWS_SECRET_KEY"]
     )
-    bucket = s3.Bucket(os.environ["S3_BUCKET_DEST"])
+    bucket = s3.Bucket("case-study-stream-compressed")
 
     # add random hour to path
     if add_random_hour:
