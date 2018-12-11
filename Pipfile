@@ -10,6 +10,7 @@ numpy = "*"
 pytest = "*"
 pandas = "*"
 pyarrow = "*"
+pytest-mock = "*"
 
 [dev-packages]
 
