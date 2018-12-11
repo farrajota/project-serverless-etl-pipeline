@@ -1,6 +1,5 @@
 LAMBDA_CODE_BUCKET=case-study-project-lambda-code
 PROJECT_NAME=case-study-project
-requests_per_second=10
 
 dev:
 	sam local start-api
@@ -43,5 +42,6 @@ setup-all:
 generate-dummy-data:
 	python scripts/generate_dummy_data.py
 
+requests_per_second=10
 generate-stream-data:
 	python scripts/generate_stream_data.py --requests_per_second $(requests_per_second)
