@@ -1,6 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: 'A serverless ETL pipeline for storing and processing visitor gender
-  hits couple with a gender service to predict a visitor''s gender by ID.
+  page hits, coupled with a gender API  service to predict the visitor''s gender using
+  an ID.
 
   '
 Outputs:
@@ -19,6 +20,10 @@ Outputs:
     Description: The Lambda Function that will process Firehose records
     Value:
       Ref: FirehoseStreamProcessFunction
+  GenderServicedApi:
+    Description: API Gateway endpoint URL for Prod stage for Hello World function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/gender/
   KinesisFirehoseDeliverStream:
     Description: Kinesis Firehose Delivery Stream ARN
     Value:
@@ -266,6 +271,32 @@ Resources:
       Timeout:
         Ref: FirehoseLambdaTimeout
     Type: AWS::Serverless::Function
+  GenderAPIFunction:
+    Properties:
+      CodeUri: s3://data-pipeline-etl-project-lambda-code/e4ea54236dfc80f6dc6bca67f5a4df11
+      Environment:
+        Variables:
+          DYNAMODB_TABLE:
+            Ref: DynamodbTableName
+      Events:
+        GetGender:
+          Properties:
+            Method: get
+            Path: /gender/{clientid}
+          Type: Api
+      Handler: app.lambda_handler
+      Policies:
+      - Statement:
+        - Action:
+          - dynamodb:GetItem
+          Effect: Allow
+          Resource:
+            Fn::GetAtt:
+            - DynamoDBTable
+            - Arn
+        Version: '2012-10-17'
+      Runtime: python3.7
+    Type: AWS::Serverless::Function
   KinesisFirehoseDeliveryStream:
     DependsOn:
     - FirehoseDeliveryPolicy
@@ -321,11 +352,19 @@ Resources:
             - s3:PutObject
             - s3:Get*
             Effect: Allow
-            Resource: arn:aws:s3:::case-study-stream-compressed*
+            Resource:
+            - Fn::Join:
+              - ''
+              - - 'arn:aws:s3:::'
+                - Ref: S3BucketCompressed
+                - '*'
           - Action:
             - dynamodb:*
             Effect: Allow
-            Resource: arn:aws:dynamodb:eu-west-1:335305222515:table/case-study-project-dynamodb-gender
+            Resource:
+              Fn::GetAtt:
+              - DynamoDBTable
+              - Arn
           Version: '2012-10-17'
         PolicyName: root
     Type: AWS::IAM::Role
@@ -344,7 +383,7 @@ Resources:
     Type: AWS::Lambda::Permission
   ProcessStreamDataUpdateDynamodbFunction:
     Properties:
-      CodeUri: s3://data-pipeline-etl-project-lambda-code/3057162b0cb3c03232ef10d4c874149c
+      CodeUri: s3://data-pipeline-etl-project-lambda-code/b44787e3410f8540a7c618cf710a1202
       Description: Compresses the stream data into parquet format, processes the hits
         per client and updates the state of the dynamodb table. It is triggered by
         a object creation event in the S3 bucket where stream data is stored as an
@@ -426,7 +465,7 @@ Resources:
     Type: AWS::Events::Rule
   TopGenderLast7DaysLambdaFunction:
     Properties:
-      CodeUri: s3://data-pipeline-etl-project-lambda-code/ad9556d3684d6891396db99c715bd118
+      CodeUri: s3://data-pipeline-etl-project-lambda-code/bd66dcb387bf85583beb54a39f27371c
       Description: Lambda function that processes the top gender per visitor in the
         last 7 days.
       Environment:

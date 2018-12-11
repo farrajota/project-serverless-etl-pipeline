@@ -2,11 +2,12 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
     A serverless ETL pipeline for storing and processing
-    visitor gender hits couple with a gender service to
-    predict a visitor's gender by ID.
+    visitor gender page hits, coupled with a gender API 
+    service to predict the visitor's gender using an ID.
 
-
+###############################################################
 Parameters:
+###############################################################
 
     S3BucketFirehoseStreamName:
         Type: String
@@ -116,7 +117,9 @@ Parameters:
             - cron(0 1 * * ? *)  # 1am every day
 
 
+###############################################################
 Resources:
+###############################################################
 
     S3BucketStoreFirehoseStream:
         Type: 'AWS::S3::Bucket'
@@ -132,6 +135,9 @@ Resources:
             AccessControl: Private
             BucketName: !Ref S3BucketCompressedName
 
+    ########################################################
+    ### Kinesis Firehose Stream
+    ########################################################
 
     KinesisFirehoseDeliveryStream:
         Type: AWS::KinesisFirehose::DeliveryStream
@@ -213,6 +219,10 @@ Resources:
             MemorySize: !Ref FirehoseLambdaMemorySize
             Timeout: !Ref FirehoseLambdaTimeout
 
+    ########################################################
+    ### Dynamodb
+    ########################################################
+
     DynamoDBTable:
         Type: AWS::DynamoDB::Table
         Properties:
@@ -226,6 +236,10 @@ Resources:
             ProvisionedThroughput:
                 ReadCapacityUnits: !Ref DynamodbReadCapacityUnits
                 WriteCapacityUnits: !Ref DynamodbWriteCapacityUnits
+
+    ########################################################
+    ### Process stream data (parquet + update dynamodb)
+    ########################################################
 
     ProcessStreamDataUpdateDynamodbFunction:
         Type: AWS::Serverless::Function
@@ -324,11 +338,16 @@ Resources:
                         Action:
                             - "s3:PutObject"
                             - "s3:Get*"
-                        Resource: "arn:aws:s3:::case-study-stream-compressed*"
+                        Resource:
+                          - !Join
+                            - ''
+                            - - 'arn:aws:s3:::'
+                              - !Ref S3BucketCompressed
+                              - '*'
                       - Effect: Allow
                         Action:
                             - "dynamodb:*"
-                        Resource: arn:aws:dynamodb:eu-west-1:335305222515:table/case-study-project-dynamodb-gender #!GetAtt DynamoDBTable.Arn
+                        Resource: !GetAtt DynamoDBTable.Arn
             ManagedPolicyArns:
                 - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
@@ -350,8 +369,37 @@ Resources:
                     DYNAMODB_TABLE: !Ref DynamodbTableName
                     FIREHOSE_PREFIX: !Ref FirehoseS3Prefix
 
+    ########################################################
+    ### Gender API
+    ########################################################
 
+    GenderAPIFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: gender_api_lambda/
+            Handler: app.lambda_handler
+            Runtime: python3.7
+            Environment:
+                Variables:
+                    DYNAMODB_TABLE: !Ref DynamodbTableName
+            Policies:
+              - Version: '2012-10-17'
+                Statement:
+                  - Effect: Allow
+                    Action:
+                        - "dynamodb:GetItem"
+                    Resource: !GetAtt DynamoDBTable.Arn
+            Events:
+                GetGender:
+                    Type: Api
+                    Properties:
+                        Path: /gender/{clientid}
+                        Method: get
+
+
+###############################################################
 Outputs:
+###############################################################
 
     S3BucketNameKinesisFirehose:
         Description: "S3 bucket to store the streaming data from Kinesis Firehose"
@@ -384,3 +432,7 @@ Outputs:
     ComputeTopGenderLast7DaysLambdaFunction:
         Description: "Lambda function that will compute the top gender per visitor in the last 7 days"
         Value: !Ref TopGenderLast7DaysLambdaFunction
+
+    GenderServicedApi:
+      Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+      Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/gender/"
