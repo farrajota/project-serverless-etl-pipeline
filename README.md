@@ -1,27 +1,45 @@
 # Case Study - Gender Service
 
-This repo contains the code to deploy a serverless data pipeline using aws' Kinesis, S3, Dynamodb, Lambda and API Gateway services.
+This repo contains the code to deploy a serverless data pipeline using AWS Kinesis, S3, Dynamodb, Lambda and API Gateway services.
 
 The architecture is coded as a CloudFormation template for easier deployment to the aws cloud.
 
 ## Pipeline overview
 
-The pipeline uses only "serverless" services in AWS to store and process streams of data from visitor's page hits. This pipeline also provides a gender API service to fetch the gender of visitors via an identifier passed a `GET` request.
+The pipeline was designed using "serverless" services from AWS to store and process streams of data from visitor's page hits. This pipeline also provides a gender API service to fetch the gender of visitors via an identifier passed as a `GET` request.
 
-The architecture of the pipeline in this repo is displayed in the image below. This architecture requires little maitenance and is capable of handling large loads of data by elasticaly scaling from dozens to thousands of requests per second without special oversight.
+The architecture design of the pipeline in this repo can be seen in the image below. This type of architecture requires little maitenance while being capable of handling large loads of data by elasticaly scaling from dozens to thousands of requests per second without special oversight.
 
 <p align="center"><img src="img/serverless_pipeline.png" alt="Serverless pipeline architecture" height="50%" width="50%"></p>
 
 ## Requirements
 
-To deploy the architecture of the pipeline, it is required the following tools in order to set it up:
+To deploy this architecture, it is required the following tools in order to set it up with the provided commands in this repo:
 
 - Linux
-- AWS account
 - Python 3.6+ (pip)
 - [docker](https://www.docker.com/)
 - [AWS CLI](https://github.com/aws/aws-cli)
 - [AWS SAM](https://github.com/awslabs/serverless-application-model)
+- AWS account
+
+> Note: Ensure that the linux distribution you are using comes with Python 3.6+ (ubuntu 16.04+ is a good choice).
+
+### Python dependencies
+
+The Python's lib dependencies are available via a `Pifile` and `requirements.txt` in this repo.
+
+If you are using `pipenv` you can install the dependencies using:
+
+```bash
+pipenv install
+```
+
+If you are using `virtualenv`, `conda` or the default python env, to install the requirements you need to do the following:
+
+```bash
+pip install -r requirements.txt
+```
 
 ### Installing docker
 
@@ -37,31 +55,31 @@ pip install awscli
 
 ### Installing AWS SAM
 
-Installing AWS Serverless Application Model (SAM) is rather simple and requires you to have docker, aws cli and pip installed in your machine. To install AWS SAM you can follow the official install guide in AWS: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html
+Installing AWS Serverless Application Model (SAM) is simple and requires you to have docker, aws cli and pip installed in your machine. To install AWS SAM, you can follow the official install guide from AWS: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html
 
-### Getting an AWS account for programmatic access
+### Getting an AWS account
 
-If you do not have an aws account you first need to create one before proceeding any further. To do so, follow the official guide here: https://aws.amazon.com/premiumsupport/knowledge-center/create-and-activate-aws-account/
+If you do not have an aws account with programmatic access, you first need to create one before proceeding any further. To do so, follow the official guide here and create an account: https://aws.amazon.com/premiumsupport/knowledge-center/create-and-activate-aws-account/
 
-When you get access to AWS services, create an account for programmatic access (and console access as well) in order to be able to deploy the pipeline in the aws cloud. This short [youtube video](https://www.youtube.com/watch?v=TbzbrkaB_Uo) should help you create one in case you don't know yet how to do it.
+When getting access to AWS services, create an account for programmatic access (and console access as well) in order to be able to deploy the pipeline in the aws cloud. This short [youtube video](https://www.youtube.com/watch?v=TbzbrkaB_Uo) should help you create one in case you don't know yet how to do it.
 
 ## Getting started
 
-Before proceeding to deploy the architecture, you will need to define two environment vars containing your aws's access key and secrets. You can set them up by doing the following:
+Before proceeding to deploy the architecture, you will need to define two environment vars containing your aws's access key and secrets. To set them up, do the following commands in a terminal window:
 
 ```bash
 export AWS_ACCESS_KEY=<your_access_key>
 export AWS_SECRET_KEY=<your_secret_key>
 ```
 
-After this is done, in order to deploy and test the architecture you need to build, package and deploy the architecture to aws cloud. Then, to really test the architecture, some dummy data is needed to be generated in order to see the pipeline working.
+After this is done, in order to deploy and test the architecture, you need to build, package and deploy the architecture template to aws cloud. Afterwards, to really test the architecture, some dummy data needs to be generated in order to see the pipeline working as expected.
 
-To simplify these processs, several macros are available in the `Makefile` in the root of this repo.
+To simplify these processes, several macros are available in the `Makefile` in the root of this repo.
 
-The next sections follows the 4 steps to start using and testing the pipeline:
+The next sections follows the 4 steps needed to start using and testing the pipeline:
 
-1. Build the code
-2. Package the code and generate a cloudformation template
+1. Building the source code
+2. Packaging the code and generate a cloudformation template
 3. Deploy the cloudformation template to aws cloud
 4. Generate dummy data to test the pipeline
 
@@ -80,9 +98,11 @@ To to this, run the following command in the terminal:
 make build
 ```
 
+This will build the lambda code and their lib requirements from these folders automatically to be deployed to AWS S3 so AWS Lambda can access these functions.
+
 ### Packaging the code
 
-Next, the code and its dependencies need to be bundled and stored in a bucket in order for aws lambda to access it, and to transform the `template.yaml` to a valid cloudformation template.
+Next, the code and its dependencies need to be bundled and stored in a S3 bucket in order for AWS Lambda to access it, and to transform the `template.yaml` to a valid cloudformation template.
 
 To package and generate the cloudformation template, run the following command in the terminal:
 
@@ -98,11 +118,11 @@ Finally, the architecture can be deployed to the aws cloud by using the cloudfor
 make deploy
 ```
 
-This will take a few minutes for aws to to spin the services. You can check its progress by visiting the CloudFormation service in the aws console. When the services and ready to run, the command shall stop and you should be able to run additional commands in the terminal.
+This will take a few minutes for AWS to to spin up the services. You can check its progress by visiting the CloudFormation service in the AWS console. When the services and ready to run, the command shall stop and you should be able to run additional commands in the terminal.
 
 ### All-in-one command
 
-You can accomplish the previous commands with the following macro to build, package and deploy the pipeline with a single command:
+You can accomplish the 3 previous commands with the following macro to build, package and deploy the pipeline with a single command:
 
 ```bash
 make setup-all
@@ -138,7 +158,7 @@ After you tested and experimented with the pipeline, you can stop and delete the
 make delete-stack
 ```
 
-> Note: S3 buckets containing files won't be deleted by default, so you might have to manually delete them to clean your environment.
+> Note: S3 buckets containing files won't be deleted by default, so you need to manually delete them to clean your environment in case the buckets used contain objects.
 
 ### Unit tests
 
