@@ -6,6 +6,7 @@ from tqdm import tqdm
 import pandas as pd
 import random
 import numpy as np
+import boto3
 
 
 prefix = 'firehose/'
@@ -22,7 +23,7 @@ def generate_data(year, month, day):
                                         day=day)
 
     # convert to pandas dataframe
-    df = pd.DataFrame(data_single_day).set_index("clientID")
+    df = pd.DataFrame(data_single_day).set_index("clientid")
 
     # split df into two
     half_size = math.ceil(len(df) / 2)
@@ -30,25 +31,35 @@ def generate_data(year, month, day):
     df2 = df.iloc[half_size:]
 
     # save to disk
-    df1.to_parquet("/tmp/data_split1.parquet", engine="pyarrow", compression="GZIP")
-    df2.to_parquet("/tmp/data_split2.parquet", engine="pyarrow", compression="GZIP")
+    #custom_path = f"{year}/{month}/{day}"
+    #if prefix:
+    #    custom_path = f"{prefix}{custom_path}"
+    #if not os.path.exists(custom_path):
+    #    os.makedirs(custom_path)
+    #    os.makedirs(f"{custom_path}/12")
+    #    os.makedirs(f"{custom_path}/13")
+    #df1.to_parquet(f"{custom_path}/12/dummy_data1.parquet", engine="pyarrow", compression="GZIP")
+    #df2.to_parquet(f"{custom_path}/13/dummy_data2.parquet", engine="pyarrow", compression="GZIP")
+    df1.to_parquet("/tmp/dummy_data1.parquet", engine="pyarrow", compression="GZIP")
+    df2.to_parquet("/tmp/dummy_data2.parquet", engine="pyarrow", compression="GZIP")
 
     # upload to s3
-    response = upload_to_s3(filenames="/tmp/data_split1.parquet",
+    response = upload_to_s3(filename="/tmp/dummy_data1.parquet",
                             year=year,
                             month=month,
                             day=day)
-    response = upload_to_s3(filenames="/tmp/data_split2.parquet",
+    response = upload_to_s3(filename="/tmp/dummy_data2.parquet",
                             year=year,
                             month=month,
                             day=day)
 
     # compute daily hits and store to s3
-    daily_hits = compute_daily_hits(df)
+    #daily_hits = compute_daily_hits(df)
+    #df2.to_parquet(f"{custom_path}/daily_hits.parquet", engine="pyarrow", compression="GZIP")
     df2.to_parquet("/tmp/daily_hits.parquet", engine="pyarrow", compression="GZIP")
 
     # upload to s3
-    response = upload_to_s3(filenames="/tmp/daily_hits.parquet",
+    response = upload_to_s3(filename="/tmp/daily_hits.parquet",
                             year=year,
                             month=month,
                             day=day,
@@ -63,7 +74,7 @@ def generate_data_day(nclients=100, visits_per_day=[5, 30], ndays=10, year=2018,
         num_visits = np.random.randint(visits_per_day[0], visits_per_day[1])
         for visit in range(num_visits):
             data_single_day.append({
-                "clientID": f"{client_id}".zfill(10),
+                "clientid": f"{client_id}".zfill(10),
                 "pageGender": random.choices(['M', 'F'], [percentage, 1 - percentage])[0]
             })
 
@@ -107,7 +118,7 @@ def upload_to_s3(filename, year, month, day, add_random_hour=True):
     # s3 file name prefix
     s3_path = f"{year}/{month}/{day}"
     if prefix:
-        s3_path = f"{prefix}/{s3_path}"
+        s3_path = f"{prefix}{s3_path}"
 
     s3 = boto3.resource(
         's3',
@@ -143,7 +154,7 @@ def main(days=10):
     # generate data for the previous 10 days
     current_time = datetime.datetime.now()
     for i in tqdm(range(1, days+1)):
-        time_delta = datetime.time_delta(days=i)
+        time_delta = datetime.timedelta(days=i)
         date = current_time - time_delta
         generate_data(year=date.year,
                       month=date.month,

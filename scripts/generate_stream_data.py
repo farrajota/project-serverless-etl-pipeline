@@ -26,7 +26,7 @@ def generate_data_client(min=1000, max=1100):
     }
 
 
-def send_record_firehose(data):
+def send_record_firehose(firehose, data):
     """Sends a record to Kinesis Firehose."""
     delivery_stream_name = "case-study-project-KinesisFirehoseDeliveryStream"
     response = firehose.put_record(
@@ -55,16 +55,17 @@ def main(n=10):
     while(1):
         for i in tqdm(range(n)):
             data = generate_data_client()
-            response = send_record_firehose(data)
+            response = send_record_firehose(firehose, data)
             time.sleep(0.005)
         time.sleep(1 - n * 0.005)
 
 if __name__ == '__main__':
     # parse input args
     parser = argparse.ArgumentParser(description='Generate streams of dummy data.')
-    parser.add_argument('--requests_per_second', action='store_const',
+    parser.add_argument('-r','--requests_per_second', dest="requests_per_second", #action='store_const',
                         default=10, help='Number of requests per second.')
     args = parser.parse_args()
 
     # run main function
-    main(n=args.requests_per_second)
+    requests_per_second = int(args.requests_per_second)
+    main(n=requests_per_second)
