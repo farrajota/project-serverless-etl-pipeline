@@ -1,5 +1,6 @@
-LAMBDA_CODE_BUCKET=data-pipeline-etl-project-lambda-code
+LAMBDA_CODE_BUCKET=case-study-project-lambda-code
 PROJECT_NAME=case-study-project
+requests_per_second=10
 
 dev:
 	sam local start-api
@@ -34,8 +35,13 @@ describe:
 	aws cloudformation describe-stacks \
 		--stack-name $(PROJECT_NAME) \
 		--query 'Stacks[].Outputs'
-
-regen:
+setup-all:
 	make build \
 		package \
 		deploy
+
+generate-dummy-data:
+	python scripts/generate_dummy_data.py
+
+generate-stream-data:
+	python scripts/generate_stream_data.py --requests_per_second $(requests_per_second)
