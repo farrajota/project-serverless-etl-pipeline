@@ -26,7 +26,7 @@ The solution to this exercise was designed using "serverless" services from AWS 
 
 The architecture design of the pipeline in this repo can be seen in the image below. This type of architecture requires little maitenance while being capable of handling large loads of data by elasticaly scaling from dozens to thousands of requests per second without special oversight.
 
-<p align="center"><img src="img/serverless_pipeline.png" alt="Serverless pipeline architecture" height="75%" width="75%"></p>
+<p align="center"><img src="img/serverless_pipeline.png" alt="Serverless pipeline architecture" height="50%" width="50%"></p>
 
 ## Requirements
 
