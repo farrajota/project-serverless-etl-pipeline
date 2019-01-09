@@ -62,10 +62,9 @@ def main(n=10):
 if __name__ == '__main__':
     # parse input args
     parser = argparse.ArgumentParser(description='Generate streams of dummy data.')
-    parser.add_argument('-r','--requests_per_second', dest="requests_per_second", #action='store_const',
-                        default=10, help='Number of requests per second.')
+    parser.add_argument('-r', '--requests-per-second', default=10,
+                        help='Number of requests per second.')
     args = parser.parse_args()
 
     # run main function
-    requests_per_second = int(args.requests_per_second)
-    main(n=requests_per_second)
+    main(n=args.requests_per_second)
