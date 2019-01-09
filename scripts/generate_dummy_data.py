@@ -7,6 +7,7 @@ import pandas as pd
 import random
 import numpy as np
 import boto3
+import argparse
 
 
 prefix = 'firehose/'
@@ -162,9 +163,11 @@ def main(days=10):
 
 
 if __name__ == '__main__':
-    # number of days to generate data
-    days = 10
+    parser = argparse.ArgumentParser(description='Generate dummy data for the past "N" days.')
+    parser.add_argument('-d', '--days', default=10,                        
+                        help='Number of days.')
+    args = parser.parse_args()
 
-    print(f"Generating dummy data for the previous {days} days of the current time...")
-    main(days=days)
+    print(f"Generating dummy data for the previous {args.days} days of the current time...")
+    main(days=args.days)
     print("\nData Generation complete!")
