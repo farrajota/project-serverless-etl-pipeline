@@ -1,16 +1,32 @@
-# Case Study - Gender Service
+# Sample Project: ETL pipeline + API service for predicting a user's gender from click stream data
 
-This repo contains the code to deploy a serverless data pipeline using AWS Kinesis, S3, Dynamodb, Lambda and API Gateway services.
+This repo contains an exercise project for processing a click stream of users visiting a website in order to create a gender predicting service to infer what gender a visitor is. Here it is shown how the pipeline and gender API service are architected, developed and deployed on AWS using AWS SAM.
 
-The architecture is coded as a CloudFormation template for easier deployment to the aws cloud.
+The solution of this exercise uses a serverless data pipeline using AWS Kinesis, S3, Dynamodb, Lambda and API Gateway services, and the architecture is coded as a CloudFormation template for easier deployment to the AWS cloud.
 
-## Pipeline overview
+## Challenge Overview
 
-The pipeline was designed using "serverless" services from AWS to store and process streams of data from visitor's page hits. This pipeline also provides a gender API service to fetch the gender of visitors via an identifier passed as a `GET` request.
+The challenge is the following (see the figure below): from a stream of event clicks of visitors on a fashion website, build a gender API service which predicts a visitor's gender by using a `clientID`. The solution must be able to handle a couple of millions of click events per day and be able to cope with a substantial increase in traffic in the upcomming months (2x more).
+
+<p align="center"><img src="img/challenge.png" alt="challenge diagram" height="75%" width="75%"></p>
+
+To determine the visitors’ gender, the three following heuristics must be used:
+
+- Last Gender Visited
+- Top Gender Visited
+- Top Gender Visited in the last 7 days (rolling window)
+
+> Note: The goal of this challenge is not to design the most accurate model to predict a visitor's gender, so a simple model is sufficient for the purpose of this exercise.
+
+The goals to solve  this challenge is to develop an infrastructure to read the stream, process and persist the data, and return the predicted gender for any user. Random data should be generated to see the pipeline in action and any technology stack is allowed. 
+
+## Solution Overview
+
+The solution to this exercise was designed using "serverless" services from AWS to store and process streams of data from visitor's page hits. This solution also provides a gender API service to fetch the gender of visitors via an identifier passed as a `GET` request.
 
 The architecture design of the pipeline in this repo can be seen in the image below. This type of architecture requires little maitenance while being capable of handling large loads of data by elasticaly scaling from dozens to thousands of requests per second without special oversight.
 
-<p align="center"><img src="img/serverless_pipeline.png" alt="Serverless pipeline architecture" height="50%" width="50%"></p>
+<p align="center"><img src="img/serverless_pipeline.png" alt="Serverless pipeline architecture" height="75%" width="75%"></p>
 
 ## Requirements
 
