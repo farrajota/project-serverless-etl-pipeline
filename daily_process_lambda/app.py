@@ -29,7 +29,7 @@ def lambda_handler(event, context):
     day = previous_datetime.day
 
     # compute all hits in a day per client
-    daily_hits = get_daily_hits(bucket, year, month, day)
+    daily_hits = get_daily_hits(year, month, day)
 
     # save daily hits to file in parquet format
     filename_parquet = f"daily-hits-{year}-{month}-{day}.parquet"
@@ -61,23 +61,23 @@ def lambda_handler(event, context):
     }
 
 
-def get_daily_hits(bucket, year, month, day):
+def get_daily_hits(year, month, day):
     """Computes visitors page hits in a single day."""
     # get an object iterator for a specific path in the
     # bucket to filter only the files for that day
     object_prefix = f'{year}/{month}/{day}'
     if prefix:
-        object_prefix = f'{prefix}/{object_prefix}'
+        object_prefix = f'{prefix}{object_prefix}'
     object_summary_iterator = bucket.objects.filter(
         Prefix=object_prefix
     )
 
     # get all objects keys (filenames)
+    daily_hits = []
     for obj in object_summary_iterator.all():
         # Get object key
         filename = obj.key
 
-        daily_hits = []
         if filename.endswith('.parquet'):
             # Download file from S3
             response = bucket.download_file(filename, temp_filename)
