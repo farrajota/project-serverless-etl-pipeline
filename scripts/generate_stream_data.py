@@ -26,9 +26,9 @@ def generate_data_client(min=1000, max=1100):
     }
 
 
-def send_record_firehose(firehose, data):
+def send_record_firehose(firehose, kinesis_stream, data):
     """Sends a record to Kinesis Firehose."""
-    delivery_stream_name = "case-study-project-KinesisFirehoseDeliveryStream"
+    delivery_stream_name = kinesis_stream
     response = firehose.put_record(
         DeliveryStreamName=delivery_stream_name,
         Record={
@@ -38,7 +38,7 @@ def send_record_firehose(firehose, data):
     return response
 
 
-def main(n=10):
+def main(n=10, kinesis_stream=""):
     """Main function."""
     # rng seed
     np.random.seed(123)
@@ -55,7 +55,7 @@ def main(n=10):
     while(1):
         for i in tqdm(range(n)):
             data = generate_data_client()
-            response = send_record_firehose(firehose, data)
+            response = send_record_firehose(firehose, kinesis_stream, data)
             time.sleep(0.005)
         time.sleep(1 - n * 0.005)
 
@@ -64,7 +64,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate streams of dummy data.')
     parser.add_argument('-r', '--requests-per-second', default=10,
                         help='Number of requests per second.')
+    parser.add_argument('-s', '--kinesis_stream_name', default="kinesis_firehose_stream",
+                        help='AWS Kinesis Firehose Stream name.')
     args = parser.parse_args()
 
     # run main function
-    main(n=args.requests_per_second)
+    main(n=args.requests_per_second, kinesis_stream=args.kinesis_stream_name)
