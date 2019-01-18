@@ -261,7 +261,7 @@ Resources:
     Type: AWS::IAM::Role
   FirehoseStreamProcessFunction:
     Properties:
-      CodeUri: s3://data-pipeline-etl-project-lambda-code/74ff9f29c0ef496de46685b154335435
+      CodeUri: s3://case-study-project-lambda-code/74ff9f29c0ef496de46685b154335435
       Description: An Amazon Kinesis Firehose stream processor that appends a timestamp
         to input records.
       Handler: app.lambda_handler
@@ -273,7 +273,7 @@ Resources:
     Type: AWS::Serverless::Function
   GenderAPIFunction:
     Properties:
-      CodeUri: s3://data-pipeline-etl-project-lambda-code/e4ea54236dfc80f6dc6bca67f5a4df11
+      CodeUri: s3://case-study-project-lambda-code/bed2e60fbe3ec12d268a71c96d1c78ca
       Environment:
         Variables:
           DYNAMODB_TABLE:
@@ -301,7 +301,7 @@ Resources:
     DependsOn:
     - FirehoseDeliveryPolicy
     Properties:
-      DeliveryStreamName: case-study-project-KinesisFirehoseDeliveryStream
+      DeliveryStreamName: case-study-kinesis_firehose_stream
       DeliveryStreamType: DirectPut
       ExtendedS3DestinationConfiguration:
         BucketARN:
@@ -383,7 +383,7 @@ Resources:
     Type: AWS::Lambda::Permission
   ProcessStreamDataUpdateDynamodbFunction:
     Properties:
-      CodeUri: s3://data-pipeline-etl-project-lambda-code/b44787e3410f8540a7c618cf710a1202
+      CodeUri: s3://case-study-project-lambda-code/ee495e8cbb62e73bb00902540c45e155
       Description: Compresses the stream data into parquet format, processes the hits
         per client and updates the state of the dynamodb table. It is triggered by
         a object creation event in the S3 bucket where stream data is stored as an
@@ -465,7 +465,7 @@ Resources:
     Type: AWS::Events::Rule
   TopGenderLast7DaysLambdaFunction:
     Properties:
-      CodeUri: s3://data-pipeline-etl-project-lambda-code/bd66dcb387bf85583beb54a39f27371c
+      CodeUri: s3://case-study-project-lambda-code/ff1f124f32eeb85346f46fd4a5acfc56
       Description: Lambda function that processes the top gender per visitor in the
         last 7 days.
       Environment:

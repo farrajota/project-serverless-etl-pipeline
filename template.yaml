@@ -144,7 +144,7 @@ Resources:
         DependsOn:
             - FirehoseDeliveryPolicy
         Properties:
-            DeliveryStreamName: case-study-project-KinesisFirehoseDeliveryStream
+            DeliveryStreamName: case-study-kinesis_firehose_stream
             DeliveryStreamType: DirectPut
             ExtendedS3DestinationConfiguration:
                 BucketARN: !GetAtt S3BucketStoreFirehoseStream.Arn
