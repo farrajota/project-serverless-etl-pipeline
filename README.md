@@ -38,6 +38,7 @@ To deploy this architecture, it is required the following tools in order to set 
 - [AWS CLI](https://github.com/aws/aws-cli)
 - [AWS SAM](https://github.com/awslabs/serverless-application-model)
 - AWS account
+- Terraform v0.11.11+ (optional)
 
 > Note: Ensure that the linux distribution you are using comes with Python 3.6+ (ubuntu 16.04+ is a good choice).
 
@@ -142,6 +143,35 @@ You can accomplish the 3 previous commands with the following macro to build, pa
 
 ```bash
 make setup-all
+```
+
+### Deploying using Terraform (WIP)
+
+The same stack can be deployed to AWS using Hashicorp's Terraform. 
+For that, you need to do the following:
+
+1. initialize terraform
+
+    ```bash
+    make terraform-init
+    ```
+
+2. Package and store the code to S3
+
+    ```bash
+    make terraform-build-package
+    ```
+
+3. Deploy the services to AWS
+
+    ```bash
+    make terraform-deploy
+    ```
+
+Afterwards, to terminate and clean the allocated services on AWS, you simple need to run the following command:
+
+```bash
+make terraform-destroy
 ```
 
 ### Generating dummy data
