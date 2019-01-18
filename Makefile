@@ -39,9 +39,35 @@ setup-all:
 		package \
 		deploy
 
+
+########################
+# Generate test data
+########################
+
 generate-dummy-data:
 	python scripts/generate_dummy_data.py
 
 requests_per_second=10
 generate-stream-data:
 	python scripts/generate_stream_data.py --requests_per_second $(requests_per_second)
+
+
+########################
+# Deploy with Terraform
+########################
+
+terraform-init:
+	terraform init terraform/
+
+terraform-build-package:
+	bash scripts/package_code.sh
+
+terraform-deploy:
+	terraform apply \
+		-var-file=terraform/terraform.tfvars \
+		terraform/
+
+terraform-destroy:
+	terraform destroy \
+		-var-file=terraform/terraform.tfvars \
+		terraform/
