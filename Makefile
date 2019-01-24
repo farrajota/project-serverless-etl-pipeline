@@ -1,3 +1,4 @@
+AWS_REGION="eu-west-1"
 LAMBDA_CODE_BUCKET=case-study-project-lambda-code
 PROJECT_NAME=case-study-project
 
@@ -56,11 +57,22 @@ generate-stream-data:
 # Deploy with Terraform
 ########################
 
+LAMBDA_KINESIS_FIREHOSE=firehose_lambda
+LAMBDA_PROCESS_STREAM=process_stream
+LAMBDA_DAILY_PROCESS=daily_process
+LAMBDA_GENDER_API=gender_api
+
 terraform-init:
 	terraform init terraform/
 
 terraform-build-package:
-	bash scripts/package_code.sh
+	bash scripts/build_package_code.sh \
+		$(AWS_REGION) \
+		$(LAMBDA_CODE_BUCKET) \
+		$(LAMBDA_KINESIS_FIREHOSE) \
+		$(LAMBDA_PROCESS_STREAM) \
+		$(LAMBDA_DAILY_PROCESS) \
+		$(LAMBDA_GENDER_API)
 
 terraform-deploy:
 	terraform apply \
