@@ -2,6 +2,10 @@ variable "project_name" {
   description = "Name of the project (to be used for prefixing services / configuration)"
 }
 
+variable "environment" {
+  description = "Environment tag name (dev / test / prod)"
+}
+
 variable "table_name" {
   description = "Name of the dynamodb table"
 }
@@ -27,12 +31,4 @@ variable "key_element_name" {
 
 variable "key_element_type" {
   description = "Primary Key Type"
-}
-
-####################
-# Tags
-####################
-
-variable "tag_environment" {
-  description = "Environment tag name (dev / test / prod)"
 }

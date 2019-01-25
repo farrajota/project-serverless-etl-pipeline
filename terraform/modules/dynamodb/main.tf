@@ -13,6 +13,6 @@ resource "aws_dynamodb_table" "gender_db" {
   tags = {
     Name        = "DynamoDB"
     Project     = "${var.project_name}"
-    Environment = "${var.tag_environment}"
+    Environment = "${var.environment}"
   }
 }
