@@ -16,15 +16,28 @@ variable "s3_code_bucket" {
   default = "case-study-project-lambda-code"
 }
 
+####################
+# S3
+####################
+
+variable "s3_uncompressed_s3_bucket" {
+  description = "S3 bucket name to store the uncompressed stream output."
+}
+
+variable "s3_compressed_s3_bucket" {
+  description = "S3 bucket name to store the compressed / processed stream output."
+}
+
 
 ####################
-# vpc
+# VPC
 ####################
 
 
 ####################
 # DynamoDB
 ####################
+
 variable "dynamodb_table_name" {
   description = "Name of the dynamodb table"
 }
@@ -81,15 +94,9 @@ variable "kinesis_firehose_compression_format" {
   description = "Compression format used by Kinesis Firehose"
 }
 
-variable "kinesis_firehose_s3_bucket" {
-  description = "S3 bucket name to store the stream output."
-}
-
-
 variable "kinesis_firehose_lambda_s3_filename" {
   description = "Name of the file of the stream process lambda in s3."
 }
-
 
 variable "kinesis_firehose_lambda_name" {
   description = "Lambda function to process kinesis firehose streams."
@@ -107,13 +114,36 @@ variable "kinesis_firehose_lambda_timeout" {
 
 
 ####################
+# Process  Data
+####################
+
+variable "process_stream_lambda_s3_filename" {
+  description = "Name of the file of the stream process lambda in s3."
+}
+
+variable "process_stream_lambda_name" {
+  description = "Lambda function to process kinesis firehose streams."
+}
+
+variable "process_stream_lambda_memory_size" {
+  description = "Size of the lambda's total memory."
+  default = 256
+}
+
+variable "process_stream_lambda_timeout" {
+  description = "Maximum Lambda execution time in seconds."
+  default = 300
+}
+
+
+####################
 # API Gateway
 ####################
 
 ####################
-# S3
+# Daily Process
 ####################
 
 ####################
-# Lambda
+# Gender API
 ####################

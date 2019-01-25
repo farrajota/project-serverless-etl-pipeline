@@ -1,6 +1,6 @@
 output "dynamodb" {
   description = "DynamoDB table to store the gender click stream statistics."
-  value = "${module.dynamodb.dynamodb_arn}"
+  value = "${module.dynamodb.dynamodb_table_arn}"
 }
 
 output "kinesis_firehose" {
