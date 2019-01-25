@@ -77,3 +77,27 @@ module "process_stream" {
   lambda_timeout           = "${var.process_stream_lambda_timeout}"
   environment              = "${var.environment}"
 }
+
+
+#######################################
+# Daily Process Top Gender Last 7 Days
+#######################################
+
+module "daily_process_gender" {
+  source                    = "./modules/daily_process"
+
+  compressed_bucket_name    = "${module.s3.compressed_s3_bucket_name}"
+  compressed_bucket_arn     = "${module.s3.compressed_s3_bucket_arn}"
+  dynamodb_table_name       = "${module.dynamodb.dynamodb_table_name}"
+  dynamodb_table_arn        = "${module.dynamodb.dynamodb_table_arn}"
+
+  project_name              = "${var.project_name}"
+  firehose_prefix          = "${var.kinesis_firehose_prefix}"
+  lambda_s3_code_bucket     = "${var.s3_code_bucket}"
+  lambda_s3_filename        = "${var.daily_process_lambda_s3_filename}"
+  lambda_name               = "${var.daily_process_lambda_name}"
+  lambda_memory_size        = "${var.daily_process_lambda_memory_size}"
+  lambda_timeout            = "${var.daily_process_lambda_timeout}"
+  cloudwatch_event_schedule = "${var.daily_process_cloudwatch_event_schedule}"
+  environment               = "${var.environment}"
+}

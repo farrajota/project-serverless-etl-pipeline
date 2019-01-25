@@ -28,3 +28,9 @@ process_stream_lambda_s3_filename = "process_stream.zip"
 process_stream_lambda_name = "process_stream_data"
 process_stream_lambda_memory_size = "256"
 process_stream_lambda_timeout = "300"
+# Daily process top gender last 7 days
+daily_process_lambda_s3_filename = "daily_process.zip"
+daily_process_lambda_name = "daily_process_top_gender"
+daily_process_lambda_memory_size = 128
+daily_process_lambda_timeout = 60
+daily_process_cloudwatch_event_schedule = "rate(1 minute)" #cron(0 1 * * ? *)

@@ -135,13 +135,36 @@ variable "process_stream_lambda_timeout" {
   default = 300
 }
 
+####################
+# Daily Process
+####################
+
+variable "daily_process_lambda_s3_filename" {
+  description = "Name of the file of the stream process lambda in s3."
+}
+
+variable "daily_process_lambda_name" {
+  description = "Lambda function to process kinesis firehose streams."
+}
+
+variable "daily_process_lambda_memory_size" {
+  description = "Size of the lambda's total memory."
+  default = 128
+}
+
+variable "daily_process_lambda_timeout" {
+  description = "Maximum Lambda execution time in seconds."
+  default = 60
+}
+
+variable "daily_process_cloudwatch_event_schedule" {
+  description = "Schedule of the cloudwatch event to trigger an aws lambda to process the top gender of the last 7 days."
+  default = "cron(0 1 * * ? *)"
+}
+
 
 ####################
 # API Gateway
-####################
-
-####################
-# Daily Process
 ####################
 
 ####################
