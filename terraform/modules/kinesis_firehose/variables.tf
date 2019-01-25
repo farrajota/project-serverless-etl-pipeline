@@ -2,6 +2,10 @@ variable "project_name" {
   description = "Name of the project (to be used for prefixing services / configuration)"
 }
 
+variable "environment" {
+  description = "Environment tag name (dev / test / prod)"
+}
+
 variable "firehose_name" {
   description = "Name of the firehose service."
 }
@@ -22,7 +26,7 @@ variable "compression_format" {
   description = "Compression format used by Kinesis Firehose"
 }
 
-variable "s3_bucket" {
+variable "s3_bucket_arn" {
   description = "S3 bucket to store the firehose stream data"
 }
 
@@ -33,7 +37,6 @@ variable "lambda_s3_code_bucket" {
 variable "lambda_s3_filename" {
   description = "Name of the file of the stream process lambda in s3."
 }
-
 
 variable "lambda_name" {
   description = "Lambda function to process kinesis firehose streams."
@@ -47,11 +50,4 @@ variable "lambda_memory_size" {
 variable "lambda_timeout" {
   description = "Maximum Lambda execution time in seconds."
   default = 60
-}
-
-####################
-# Tags
-####################
-variable "tag_environment" {
-  description = "Environment tag name (dev / test / prod)"
 }
