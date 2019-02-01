@@ -2,6 +2,7 @@ provider "aws" {
   region = "${var.aws_region}"
 }
 
+
 ####################
 # S3
 ####################
