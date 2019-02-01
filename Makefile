@@ -50,7 +50,9 @@ generate-dummy-data:
 
 requests_per_second=10
 generate-stream-data:
-	python scripts/generate_stream_data.py --requests_per_second $(requests_per_second)
+	python scripts/generate_stream_data.py \
+		--requests-per-second $(requests_per_second) \
+		--kinesis_stream_name $(kinesis_stream_name)
 
 
 ########################
