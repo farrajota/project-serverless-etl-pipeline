@@ -22,5 +22,6 @@ resource "aws_lambda_function" "data_processor" {
     Name        = "Lambda"
     Project     = "${var.project_name}"
     Environment = "${var.environment}"
+    managed_by  = "terraform"
   }
 }

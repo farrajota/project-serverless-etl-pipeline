@@ -20,5 +20,6 @@ resource "aws_lambda_function" "gender_getter" {
     Name        = "Lambda"
     Project     = "${var.project_name}"
     Environment = "${var.environment}"
+    managed_by  = "terraform"
   }
 }

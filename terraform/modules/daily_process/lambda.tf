@@ -22,5 +22,6 @@ resource "aws_lambda_function" "daily_process" {
     Name        = "Lambda"
     Project     = "${var.project_name}"
     Environment = "${var.environment}"
+    managed_by  = "terraform"
   }
 }

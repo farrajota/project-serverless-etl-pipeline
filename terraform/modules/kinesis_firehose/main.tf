@@ -34,5 +34,6 @@ resource "aws_kinesis_firehose_delivery_stream" "kinesis_firehose_to_s3" {
     Name        = "Kinesis-Firehose"
     Project     = "${var.project_name}"
     Environment = "${var.environment}"
+    managed_by  = "terraform"
   }
 }

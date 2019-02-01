@@ -14,5 +14,6 @@ resource "aws_dynamodb_table" "gender_db" {
     Name        = "DynamoDB"
     Project     = "${var.project_name}"
     Environment = "${var.environment}"
+    managed_by  = "terraform"
   }
 }
