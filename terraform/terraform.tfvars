@@ -1,6 +1,6 @@
 project_name = "case-study"
 environment = "production"
-region = "eu-west-1"
+aws_region = "eu-west-1"
 s3_code_bucket = "case-study-project-lambda-code"
 # S3
 s3_uncompressed_s3_bucket = "kinesis-firehose-stream"
@@ -34,3 +34,10 @@ daily_process_lambda_name = "daily_process_top_gender"
 daily_process_lambda_memory_size = 128
 daily_process_lambda_timeout = 60
 daily_process_cloudwatch_event_schedule = "rate(1 minute)" #cron(0 1 * * ? *)
+# API Gateway (Gender API)
+api_gateway_lambda_s3_filename = "gender_api.zip"
+api_gateway_lambda_name = "gender_api"
+api_gateway_lambda_memory_size = 128
+api_gateway_lambda_timeout = 10
+api_gateway_name = "gender_api"
+api_gateway_stage_name = "test"

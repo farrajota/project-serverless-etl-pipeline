@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "${var.region}"
+  region = "${var.aws_region}"
 }
 
 ####################
@@ -100,4 +100,28 @@ module "daily_process_gender" {
   lambda_timeout            = "${var.daily_process_lambda_timeout}"
   cloudwatch_event_schedule = "${var.daily_process_cloudwatch_event_schedule}"
   environment               = "${var.environment}"
+}
+
+
+####################
+# API Gateway
+####################
+
+module "gender_api_gateway" {
+  source                = "./modules/api_gateway"
+
+  dynamodb_table_name   = "${module.dynamodb.dynamodb_table_name}"
+  dynamodb_table_arn    = "${module.dynamodb.dynamodb_table_arn}"
+
+  aws_account           = "${var.aws_account}"
+  project_name          = "${var.project_name}"
+  lambda_s3_code_bucket = "${var.s3_code_bucket}"
+  lambda_s3_filename    = "${var.api_gateway_lambda_s3_filename}"
+  lambda_name           = "${var.api_gateway_lambda_name}"
+  lambda_memory_size    = "${var.api_gateway_lambda_memory_size}"
+  lambda_timeout        = "${var.api_gateway_lambda_timeout}"
+  api_name              = "${var.api_gateway_name}"
+  aws_region            = "${var.aws_region}"
+  api_stage_name        = "${var.api_gateway_stage_name}"
+  environment           = "${var.environment}"
 }

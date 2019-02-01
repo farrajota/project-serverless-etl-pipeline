@@ -6,7 +6,11 @@ variable "environment" {
   description = "Environment tag name (dev / test / prod)"
 }
 
-variable "region" {
+variable "aws_account" {
+  description = "AWS account id"
+}
+
+variable "aws_region" {
   description = "Region to deploy the services"
   default = "eu-west-1"
 }
@@ -167,6 +171,28 @@ variable "daily_process_cloudwatch_event_schedule" {
 # API Gateway
 ####################
 
-####################
-# Gender API
-####################
+variable "api_gateway_lambda_s3_filename" {
+  description = "Name of the file of the gender api lambda in s3."
+}
+
+variable "api_gateway_lambda_name" {
+  description = "Lambda function to get the gender for a clientid."
+}
+
+variable "api_gateway_lambda_memory_size" {
+  description = "Size of the lambda's total memory."
+  default = 128
+}
+
+variable "api_gateway_lambda_timeout" {
+  description = "Maximum Lambda execution time in seconds."
+  default = 10
+}
+
+variable "api_gateway_name" {
+  description = "Name of the gender api"
+}
+
+variable "api_gateway_stage_name" {
+  description = "Stage of the api (Test/QA/Prod)"
+}
