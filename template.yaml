@@ -111,7 +111,7 @@ Parameters:
         Default: rate(1 minute)
         AllowedValues:
             - rate(1 minute)
-            - rate(5 minute)
+            - rate(5 minutes)
             - rate(10 minutes)
             - rate(60 minutes)
             - cron(0 1 * * ? *)  # 1am every day
@@ -244,6 +244,7 @@ Resources:
     ProcessStreamDataUpdateDynamodbFunction:
         Type: AWS::Serverless::Function
         Properties:
+            FunctionName: "process_stream_data_sam"
             CodeUri: process_stream_data/
             Handler: app.lambda_handler
             Runtime: python3.7
@@ -306,7 +307,7 @@ Resources:
             ScheduleExpression: !Ref LambdaRate
             State: "ENABLED"
             Targets:
-              - Arn: !GetAtt TopGenderLast7DaysLambdaFunction.Arn #!Sub ${TopGenderLast7DaysLambdaFunction.Arn}
+              - Arn: !GetAtt TopGenderLast7DaysLambdaFunction.Arn
                 Id: LambdaSchedule
 
     PermissionForEventsToInvokeLambda:
@@ -358,7 +359,7 @@ Resources:
             Handler: app.lambda_handler
             Runtime: python3.7
             Description: >-
-                Lambda function that processes the top gender per visitor
+                Processes the top gender per visitor
                 in the last 7 days.
             Role: !GetAtt LambdaExecutionRole.Arn
             MemorySize: 128

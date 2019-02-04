@@ -383,7 +383,7 @@ Resources:
     Type: AWS::Lambda::Permission
   ProcessStreamDataUpdateDynamodbFunction:
     Properties:
-      CodeUri: s3://case-study-project-lambda-code/ee495e8cbb62e73bb00902540c45e155
+      CodeUri: s3://case-study-project-lambda-code/31a3499db9a6ec01e8c39ab4c85fcca8
       Description: Compresses the stream data into parquet format, processes the hits
         per client and updates the state of the dynamodb table. It is triggered by
         a object creation event in the S3 bucket where stream data is stored as an
@@ -403,6 +403,7 @@ Resources:
               Ref: S3BucketStoreFirehoseStream
             Events: s3:ObjectCreated:*
           Type: S3
+      FunctionName: process_stream_data_sam
       Handler: app.lambda_handler
       MemorySize: 256
       Policies:
@@ -465,7 +466,7 @@ Resources:
     Type: AWS::Events::Rule
   TopGenderLast7DaysLambdaFunction:
     Properties:
-      CodeUri: s3://case-study-project-lambda-code/ff1f124f32eeb85346f46fd4a5acfc56
+      CodeUri: s3://case-study-project-lambda-code/3d81baf57c07b5d8441db563f70fd0ba
       Description: Lambda function that processes the top gender per visitor in the
         last 7 days.
       Environment:
