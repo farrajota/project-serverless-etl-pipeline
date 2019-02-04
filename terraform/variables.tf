@@ -20,6 +20,7 @@ variable "s3_code_bucket" {
   default = "case-study-project-lambda-code"
 }
 
+
 ####################
 # S3
 ####################
@@ -31,11 +32,6 @@ variable "s3_uncompressed_s3_bucket" {
 variable "s3_compressed_s3_bucket" {
   description = "S3 bucket name to store the compressed / processed stream output."
 }
-
-
-####################
-# VPC
-####################
 
 
 ####################
