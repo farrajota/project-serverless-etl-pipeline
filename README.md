@@ -33,14 +33,14 @@ The architecture design of the pipeline in this repo can be seen in the image be
 To deploy this architecture, it is required the following tools in order to set it up with the provided commands in this repo:
 
 - Linux
-- Python 3.6+ (pip)
-- [docker](https://www.docker.com/)
+- Python 3.6+
+- [Docker](https://www.docker.com/)
 - [AWS CLI](https://github.com/aws/aws-cli)
 - [AWS SAM](https://github.com/awslabs/serverless-application-model)
 - AWS account
 - Terraform v0.11.11+ (optional)
 
-> Note: Ensure that the linux distribution you are using comes with Python 3.6+ (ubuntu 16.04+ is a good choice).
+> Note: Ensure that the linux distribution you are using comes with Python 3.6+ support (ubuntu 16.04+ is a good choice).
 
 ### Python dependencies
 
@@ -145,10 +145,10 @@ You can accomplish the 3 previous commands with the following macro to build, pa
 make setup-all
 ```
 
-### Deploying using Terraform (WIP)
+### Deploying using Terraform
 
-The same stack can be deployed to AWS using Hashicorp's Terraform. 
-For that, you need to do the following:
+The same stack can be deployed to AWS using Hashicorp's Terraform.
+For that, you need to first have terraform installed on your machine, and then you can do the following to deploy the architecture to AWS:
 
 1. initialize terraform
 
@@ -168,11 +168,11 @@ For that, you need to do the following:
     make terraform-deploy
     ```
 
-Afterwards, to terminate and clean the allocated services on AWS, you simple need to run the following command:
+4. Afterwards, to terminate and clean the allocated services on AWS, run the following command:
 
-```bash
-make terraform-destroy
-```
+    ```bash
+    make terraform-destroy
+    ```
 
 ### Generating dummy data
 
